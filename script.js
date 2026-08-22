@@ -69,7 +69,7 @@ function renderGallery(filter = 'all') {
     }
     
     galleryGrid.innerHTML = filteredItems.map(item => {
-        const isVideo = item.url.includes('.mp4') || item.url.includes('.webm') || item.url.includes('.mov');
+        const isVideo = item.url.includes('.mp4') || item.url.includes('.webm') || item.url.includes('.mov') || item.url.includes('.avi');
         return `
             <div class="gallery-item" data-category="${item.category}">
                 ${isVideo ? `<video class="gallery-media" src="${item.url}"></video>` : `<img class="gallery-media" src="${item.url}" alt="${item.title}">`}
@@ -154,6 +154,35 @@ const descriptionInput = document.getElementById('descriptionInput');
 
 let selectedFile = null;
 
+// Define file size limits (in bytes)
+const FILE_SIZE_LIMITS = {
+    photo: 500 * 1024 * 1024,  // 500 MB for photos
+    video: 2 * 1024 * 1024 * 1024  // 2 GB for videos
+};
+
+// Video file extensions
+const VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv', 'wmv', 'mts', 'm4v'];
+
+// Check if file is video
+function isVideoFile(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    return VIDEO_EXTENSIONS.includes(ext);
+}
+
+// Get max file size for file type
+function getMaxFileSize(filename) {
+    return isVideoFile(filename) ? FILE_SIZE_LIMITS.video : FILE_SIZE_LIMITS.photo;
+}
+
+// Format bytes to readable format
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
 // Handle drag and drop
 uploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -198,9 +227,14 @@ function uploadFile() {
         return;
     }
     
-    // Check file size (max 100MB)
-    if (selectedFile.size > 100 * 1024 * 1024) {
-        alert('File terlalu besar! Max 100MB');
+    // Check file size with smart limit
+    const maxSize = getMaxFileSize(selectedFile.name);
+    const isVideo = isVideoFile(selectedFile.name);
+    const fileType = isVideo ? 'video' : 'foto';
+    
+    if (selectedFile.size > maxSize) {
+        const maxSizeFormatted = formatBytes(maxSize);
+        alert(`File ${fileType} terlalu besar! Max ${maxSizeFormatted}`);
         return;
     }
     
@@ -251,7 +285,7 @@ function uploadFile() {
                 categoryInput.value = 'outing';
                 selectedFile = null;
                 fileInput.value = '';
-                uploadArea.innerHTML = `<i class="fas fa-cloud-upload-alt"></i><h3>Drag & drop file di sini</h3><p>atau klik untuk memilih file</p><p class="upload-info">Foto, Video, GIF (Max 100MB per file)</p>`;
+                uploadArea.innerHTML = `<i class="fas fa-cloud-upload-alt"></i><h3>Drag & drop file di sini</h3><p>atau klik untuk memilih file</p><p class="upload-info">Foto, Video, GIF (Max 500MB untuk foto, 2GB untuk video)</p>`;
                 
                 // Refresh gallery
                 renderGallery(currentFilter);
