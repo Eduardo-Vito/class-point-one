@@ -1,0 +1,11 @@
+{
+  "classInfo": {
+    "name": "Class Point One",
+    "totalMembers": 36,
+    "year": 2024
+  },
+  "members": [
+    { "id": 1, "name": "Nama Anggota 1", "role": "Anggota" },
+    { "id": 2, "name": "Nama Anggota 2", "role": "Anggota" }
+  ]
+}
