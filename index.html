@@ -18,6 +18,7 @@
             <ul class="nav-menu">
                 <li><a href="#home" class="nav-link active">Beranda</a></li>
                 <li><a href="#members" class="nav-link">Anggota</a></li>
+                <li><a href="#upload" class="nav-link">Upload Foto</a></li>
                 <li><a href="#gallery" class="nav-link">Galeri Memori</a></li>
                 <li><a href="#contact" class="nav-link">Kontak</a></li>
             </ul>
@@ -44,6 +45,44 @@
             <h2 class="section-title">Anggota Kelas (36 Anak)</h2>
             <div class="members-grid" id="membersGrid">
                 <!-- Member cards akan di-generate oleh JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section id="upload" class="upload-section">
+        <div class="container">
+            <h2 class="section-title">Upload Foto & Video Memori</h2>
+            <div class="upload-container">
+                <div class="upload-form">
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>Drag & drop file di sini</h3>
+                        <p>atau klik untuk memilih file</p>
+                        <p class="upload-info">Foto, Video, GIF (Max 100MB)</p>
+                    </div>
+                    <input type="file" id="fileInput" style="display: none;" accept="image/*,video/*">
+                    
+                    <div class="upload-details">
+                        <input type="text" id="titleInput" class="form-input" placeholder="Judul Foto/Video*" required>
+                        <select id="categoryInput" class="form-input">
+                            <option value="outing">Outing</option>
+                            <option value="event">Acara</option>
+                            <option value="study">Belajar</option>
+                        </select>
+                        <textarea id="descriptionInput" class="form-input" placeholder="Deskripsi (opsional)" rows="3"></textarea>
+                        <button class="btn btn-primary" id="uploadBtn" style="width: 100%;">Upload</button>
+                    </div>
+                    
+                    <div id="progressContainer" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div id="progressText"></div>
+                    </div>
+                    
+                    <div id="uploadStatus"></div>
+                </div>
             </div>
         </div>
     </section>
@@ -99,8 +138,11 @@
     <!-- Modal untuk Gambar Besar -->
     <div id="imageModal" class="modal">
         <span class="close">&times;</span>
-        <img class="modal-content" id="modalImage">
-        <div id="caption"></div>
+        <div class="modal-content-wrapper">
+            <img class="modal-content" id="modalImage" style="display: none;">
+            <video class="modal-content" id="modalVideo" style="display: none;" controls></video>
+            <div id="caption"></div>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -115,6 +157,7 @@
         </div>
     </footer>
 
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
