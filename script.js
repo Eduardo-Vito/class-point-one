@@ -42,6 +42,9 @@ const members = [
 let galleryItems = [];
 let currentFilter = 'all';
 
+// Upload info text constant
+const UPLOAD_INFO_TEXT = 'Foto, Video, GIF (Max 500MB untuk foto, 2GB untuk video)';
+
 // Render Members
 function renderMembers() {
     const membersGrid = document.getElementById('membersGrid');
@@ -285,7 +288,7 @@ function uploadFile() {
                 categoryInput.value = 'outing';
                 selectedFile = null;
                 fileInput.value = '';
-                uploadArea.innerHTML = `<i class="fas fa-cloud-upload-alt"></i><h3>Drag & drop file di sini</h3><p>atau klik untuk memilih file</p><p class="upload-info">Foto, Video, GIF (Max 500MB untuk foto, 2GB untuk video)</p>`;
+                uploadArea.innerHTML = `<i class="fas fa-cloud-upload-alt"></i><h3>Drag & drop file di sini</h3><p>atau klik untuk memilih file</p><p class="upload-info">${UPLOAD_INFO_TEXT}</p>`;
                 
                 // Refresh gallery
                 renderGallery(currentFilter);
