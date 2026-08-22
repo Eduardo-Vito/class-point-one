@@ -1,4 +1,4 @@
-// Data Anggota Kelas (Template - Anda bisa mengubahnya)
+// Data Anggota Kelas
 const members = [
     { id: 1, name: 'Ahmad Hafizh Novadhilah', role: 'Anggota' },
     { id: 2, name: 'Aisha Dwi Apriliani', role: 'Anggota' },
@@ -9,7 +9,7 @@ const members = [
     { id: 7, name: 'Annissa Siti Mutia', role: 'Anggota' },
     { id: 8, name: 'Aura Hurin Nasywa Tarigan', role: 'Anggota' },
     { id: 9, name: 'Cheryl Aginta Nur Rahmadina', role: 'Anggota' },
-    { id: 10, name: '⁠Diah Ayu Puspitasari', role: 'Anggota' },
+    { id: 10, name: 'Diah Ayu Puspitasari', role: 'Anggota' },
     { id: 11, name: 'Eduardo Vito Adisaputra', role: 'Anggota' },
     { id: 12, name: 'Erna Aprilia Putri', role: 'Anggota' },
     { id: 13, name: 'Fifi Alysya Safira', role: 'Anggota' },
@@ -34,21 +34,13 @@ const members = [
     { id: 32, name: 'Satrio Alfatah', role: 'Anggota' },
     { id: 33, name: 'Sulthan Adlii Prasetyo', role: 'Anggota' },
     { id: 34, name: 'Wafiq Nur Azizah', role: 'Anggota' },
-    { id: 35, name: '⁠Zahra Rizky Rahmani', role: 'Anggota' },
+    { id: 35, name: 'Zahra Rizky Rahmani', role: 'Anggota' },
     { id: 36, name: 'Zefanya Mei Artanauli Hutahaean', role: 'Anggota' }
 ];
 
-// Data Galeri (Template - Anda bisa menambahkan foto Anda)
-const galleryItems = [
-    { id: 1, title: 'Foto Memori 1', category: 'outing', image: 'https://via.placeholder.com/400x300?text=Foto+1' },
-    { id: 2, title: 'Foto Memori 2', category: 'event', image: 'https://via.placeholder.com/400x300?text=Foto+2' },
-    { id: 3, title: 'Foto Memori 3', category: 'study', image: 'https://via.placeholder.com/400x300?text=Foto+3' },
-    { id: 4, title: 'Foto Memori 4', category: 'outing', image: 'https://via.placeholder.com/400x300?text=Foto+4' },
-    { id: 5, title: 'Foto Memori 5', category: 'event', image: 'https://via.placeholder.com/400x300?text=Foto+5' },
-    { id: 6, title: 'Foto Memori 6', category: 'study', image: 'https://via.placeholder.com/400x300?text=Foto+6' },
-    { id: 7, title: 'Foto Memori 7', category: 'outing', image: 'https://via.placeholder.com/400x300?text=Foto+7' },
-    { id: 8, title: 'Foto Memori 8', category: 'event', image: 'https://via.placeholder.com/400x300?text=Foto+8' }
-];
+// Data Galeri (akan dimuat dari Firebase)
+let galleryItems = [];
+let currentFilter = 'all';
 
 // Render Members
 function renderMembers() {
@@ -71,17 +63,24 @@ function renderGallery(filter = 'all') {
     const galleryGrid = document.getElementById('galleryGrid');
     const filteredItems = filter === 'all' ? galleryItems : galleryItems.filter(item => item.category === filter);
     
-    galleryGrid.innerHTML = filteredItems.map(item => `
-        <div class="gallery-item" data-category="${item.category}">
-            <img src="${item.image}" alt="${item.title}" class="gallery-img">
-            <div class="gallery-overlay">
-                <i class="fas fa-search-plus"></i>
-            </div>
-            <div class="gallery-caption">${item.title}</div>
-        </div>
-    `).join('');
+    if (filteredItems.length === 0) {
+        galleryGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 2rem;">Belum ada file yang diupload</p>';
+        return;
+    }
     
-    // Add click listeners to gallery items
+    galleryGrid.innerHTML = filteredItems.map(item => {
+        const isVideo = item.url.includes('.mp4') || item.url.includes('.webm') || item.url.includes('.mov');
+        return `
+            <div class="gallery-item" data-category="${item.category}">
+                ${isVideo ? `<video class="gallery-media" src="${item.url}"></video>` : `<img class="gallery-media" src="${item.url}" alt="${item.title}">`}
+                <div class="gallery-overlay">
+                    <i class="fas ${isVideo ? 'fa-play' : 'fa-search-plus'}"></i>
+                </div>
+                <div class="gallery-caption">${item.title}</div>
+            </div>
+        `;
+    }).join('');
+    
     addGalleryListeners();
 }
 
@@ -92,8 +91,8 @@ function setupGalleryFilters() {
         btn.addEventListener('click', function() {
             filterBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            const filter = this.getAttribute('data-filter');
-            renderGallery(filter);
+            currentFilter = this.getAttribute('data-filter');
+            renderGallery(currentFilter);
         });
     });
 }
@@ -101,6 +100,7 @@ function setupGalleryFilters() {
 // Modal functionality
 const modal = document.getElementById('imageModal');
 const modalImg = document.getElementById('modalImage');
+const modalVid = document.getElementById('modalVideo');
 const captionText = document.getElementById('caption');
 const closeBtn = document.querySelector('.close');
 
@@ -108,10 +108,21 @@ function addGalleryListeners() {
     const galleryItems = document.querySelectorAll('.gallery-item');
     galleryItems.forEach(item => {
         item.addEventListener('click', function() {
-            const img = this.querySelector('img');
+            const media = this.querySelector('.gallery-media');
             const caption = this.querySelector('.gallery-caption');
+            const isVideo = media.tagName === 'VIDEO';
+            
             modal.style.display = 'block';
-            modalImg.src = img.src;
+            
+            if (isVideo) {
+                modalImg.style.display = 'none';
+                modalVid.style.display = 'block';
+                modalVid.src = media.src;
+            } else {
+                modalImg.style.display = 'block';
+                modalVid.style.display = 'none';
+                modalImg.src = media.src;
+            }
             captionText.innerHTML = caption.innerText;
         });
     });
@@ -119,13 +130,191 @@ function addGalleryListeners() {
 
 closeBtn.addEventListener('click', function() {
     modal.style.display = 'none';
+    modalVid.pause();
 });
 
 window.addEventListener('click', function(event) {
     if (event.target === modal) {
         modal.style.display = 'none';
+        modalVid.pause();
     }
 });
+
+// FIREBASE UPLOAD FUNCTIONALITY
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const uploadBtn = document.getElementById('uploadBtn');
+const progressContainer = document.getElementById('progressContainer');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const uploadStatus = document.getElementById('uploadStatus');
+const titleInput = document.getElementById('titleInput');
+const categoryInput = document.getElementById('categoryInput');
+const descriptionInput = document.getElementById('descriptionInput');
+
+let selectedFile = null;
+
+// Handle drag and drop
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    selectedFile = e.dataTransfer.files[0];
+    updateFileInfo();
+});
+
+uploadArea.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+    selectedFile = e.target.files[0];
+    updateFileInfo();
+});
+
+function updateFileInfo() {
+    if (selectedFile) {
+        const sizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
+        uploadArea.innerHTML = `<i class="fas fa-check-circle" style="color: green;"></i><h3>${selectedFile.name}</h3><p>${sizeMB} MB</p>`;
+    }
+}
+
+uploadBtn.addEventListener('click', uploadFile);
+
+function uploadFile() {
+    if (!selectedFile) {
+        alert('Pilih file terlebih dahulu!');
+        return;
+    }
+    
+    if (!titleInput.value) {
+        alert('Masukkan judul foto/video!');
+        return;
+    }
+    
+    // Check file size (max 100MB)
+    if (selectedFile.size > 100 * 1024 * 1024) {
+        alert('File terlalu besar! Max 100MB');
+        return;
+    }
+    
+    const title = titleInput.value;
+    const category = categoryInput.value;
+    const timestamp = new Date().getTime();
+    const fileName = `${timestamp}_${selectedFile.name}`;
+    const storageRef = window.firebaseStorage.ref(window.firebaseStorage.storage, `gallery/${category}/${fileName}`);
+    
+    const uploadTask = window.firebaseStorage.uploadBytesResumable(storageRef, selectedFile);
+    
+    progressContainer.style.display = 'block';
+    uploadStatus.innerHTML = '';
+    
+    uploadTask.on('state_changed',
+        (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            progressFill.style.width = progress + '%';
+            progressText.textContent = `Uploading... ${Math.round(progress)}%`;
+        },
+        (error) => {
+            progressContainer.style.display = 'none';
+            uploadStatus.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            console.error('Upload error:', error);
+        },
+        async () => {
+            try {
+                const downloadURL = await window.firebaseStorage.getDownloadURL(storageRef);
+                
+                // Add to gallery
+                galleryItems.push({
+                    id: timestamp,
+                    title: title,
+                    category: category,
+                    url: downloadURL,
+                    description: descriptionInput.value
+                });
+                
+                // Save to localStorage
+                localStorage.setItem('galleryItems', JSON.stringify(galleryItems));
+                
+                progressContainer.style.display = 'none';
+                uploadStatus.innerHTML = '<p class="success">✓ File berhasil diupload!</p>';
+                
+                // Reset form
+                titleInput.value = '';
+                descriptionInput.value = '';
+                categoryInput.value = 'outing';
+                selectedFile = null;
+                fileInput.value = '';
+                uploadArea.innerHTML = `<i class="fas fa-cloud-upload-alt"></i><h3>Drag & drop file di sini</h3><p>atau klik untuk memilih file</p><p class="upload-info">Foto, Video, GIF (Max 100MB per file)</p>`;
+                
+                // Refresh gallery
+                renderGallery(currentFilter);
+                
+                // Scroll to gallery
+                setTimeout(() => {
+                    document.getElementById('gallery').scrollIntoView({ behavior: 'smooth' });
+                }, 1000);
+            } catch (error) {
+                progressContainer.style.display = 'none';
+                uploadStatus.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                console.error('Download URL error:', error);
+            }
+        }
+    );
+}
+
+// Load gallery from Firebase
+async function loadGalleryFromFirebase() {
+    try {
+        // Load from localStorage first
+        const savedItems = localStorage.getItem('galleryItems');
+        if (savedItems) {
+            galleryItems = JSON.parse(savedItems);
+        }
+        
+        // Also try to load from Firebase Storage
+        try {
+            const storageRef = window.firebaseStorage.ref(window.firebaseStorage.storage, 'gallery');
+            const result = await window.firebaseStorage.listAll(storageRef);
+            
+            // Get files from all category folders
+            for (const folder of result.prefixes) {
+                const folderResult = await window.firebaseStorage.listAll(folder);
+                for (const file of folderResult.items) {
+                    const url = await window.firebaseStorage.getDownloadURL(file);
+                    const fileName = file.name;
+                    const category = folder.name;
+                    
+                    // Check if already exists
+                    if (!galleryItems.find(item => item.url === url)) {
+                        galleryItems.push({
+                            id: Date.now(),
+                            title: fileName.replace(/^\d+_/, ''),
+                            category: category,
+                            url: url
+                        });
+                    }
+                }
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('galleryItems', JSON.stringify(galleryItems));
+        } catch (e) {
+            console.log('Could not load from Firebase Storage (may not have permission yet)');
+        }
+        
+        renderGallery();
+    } catch (error) {
+        console.error('Error loading gallery:', error);
+        renderGallery();
+    }
+}
 
 // Smooth scroll
 function scrollToSection(sectionId) {
@@ -158,9 +347,11 @@ window.addEventListener('scroll', function() {
 const hamburger = document.querySelector('.hamburger');
 const navMenu = document.querySelector('.nav-menu');
 
-hamburger.addEventListener('click', function() {
-    navMenu.classList.toggle('active');
-});
+if (hamburger) {
+    hamburger.addEventListener('click', function() {
+        navMenu.classList.toggle('active');
+    });
+}
 
 const navLinks = document.querySelectorAll('.nav-link');
 navLinks.forEach(link => {
@@ -172,6 +363,6 @@ navLinks.forEach(link => {
 // Initialize
 window.addEventListener('load', function() {
     renderMembers();
-    renderGallery();
+    loadGalleryFromFirebase();
     setupGalleryFilters();
 });
